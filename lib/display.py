@@ -5,6 +5,7 @@ import config
 from time import sleep
 from utime import ticks_ms
 import uasyncio
+from machine import Pin, PWM
 
 class Display:
     def __init__(self, log_level: int) -> None:
@@ -54,14 +55,15 @@ class Display:
         self.logger.info("Backlight on")
         self.display.set_backlight(1.0)
         self.backlight_on_time_ms = ticks_ms()
+        self.backlight_is_on = True
 
     def backlight_off(self) -> None:
         self.logger.info("Backlight off")
         self.display.set_backlight(0)
-        self.backlight_on_time_ms = 0
+        self.backlight_is_on = False
     
     def should_backlight_be_switched_off(self) -> bool:
-        if self.backlight_on_time_ms > 0 and (self.backlight_on_time_ms + (config.backlight_timeout_s * 1000)) < ticks_ms() and self.mode != "startup":
+        if self.backlight_is_on and (self.backlight_on_time_ms + (config.backlight_timeout_s * 1000)) < ticks_ms() and self.mode != "startup":
             return True
         else:
             return False

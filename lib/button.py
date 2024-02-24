@@ -12,6 +12,17 @@ class Button:
         self.button_pressed = uasyncio.Event()
         self.display = display
 
+    def enable_backlight_or_register_button_press(self) -> None:
+        self.logger.info("Button pressed")
+        if self.display.backlight_is_on == False:
+            self.logger.info("Backlight was off - not setting button_pressed")
+            
+        else:
+            self.logger.info("Backlight on - Setting button_pressed")
+            self.button_pressed.set()
+        
+        self.display.backlight_on()
+    
     async def wait_for_press(self) -> None:
         self.logger.info("Starting button press watcher")
         
@@ -19,16 +30,9 @@ class Button:
             previous_value = self.pin.value()
             while (self.pin.value() == previous_value):
                 previous_value = self.pin.value()
-                await uasyncio.sleep(0.04)
+                await uasyncio.sleep(0.25) #This is not reliably debouncing and responding. Try integrator
             
-            self.logger.info("Button pressed")
-            if self.display.backlight_on_time_ms == 0:
-                self.logger.info("Enabling backlight - button_pressed not set")
-                self.display.backlight_on()
-            else:
-                self.logger.info("Backlight on - Setting button_pressed")
-                self.display.backlight_on() # Reset backlight timeout
-                self.button_pressed.set()
+            self.enable_backlight_or_register_button_press()
 
     def set_function_on_press(self, function, function_args: list = []) -> None:
         uasyncio.create_task(self.function_on_press(function, function_args))
